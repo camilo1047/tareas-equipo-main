@@ -1,53 +1,71 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import * as jwt_decode from 'jwt-decode'; // Importar jwt-decode correctamente
+import React, { useState } from "react";
+import axios from "axios";
+import { jwtDecode } from 'jwt-decode'; // Importación corregida
 
 const Dashboard = () => {
     const [task, setTask] = useState({
-        title: '',
-        description: '',
-        dueDate: '',
-        priority: '',
-        user: '' // Agregar el campo user
+        title: "",
+        description: "",
+        dueDate: "",
+        priority: "",
     });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setTask({
             ...task,
-            [name]: value
+            [name]: value,
         });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem('token'); // Assuming the JWT is stored in localStorage
+            const token = localStorage.getItem("token");
+
             if (!token) {
-                throw new Error('No token found');
+                console.error("No se encontró un token. El usuario no está autenticado.");
+                return;
             }
-            const decodedToken = jwt_decode(token); // Usar jwt_decode.default para decodificar el token
-            const userId = decodedToken.id; // Obtener el ID del usuario del token decodificado
-            const taskWithUser = { ...task, user: userId }; // Agregar el campo user al objeto task
-            console.log('Submitting task:', taskWithUser); // Imprimir el objeto task antes de enviarlo
-            const response = await axios.post('http://localhost:5000/api/tasks', taskWithUser, {
-                headers: {
-                    Authorization: `Bearer ${token}`
+
+            const decodedToken = jwtDecode(token);
+            if (!decodedToken.id) {
+                console.error("El token no contiene un ID de usuario válido.");
+                return;
+            }
+
+            const taskWithUser = { ...task, user: decodedToken.id };
+
+            console.log("Enviando tarea:", JSON.stringify(taskWithUser, null, 2));
+
+            const response = await axios.post(
+                "http://localhost:5000/api/tasks",
+                taskWithUser,
+                {
+                    headers: {
+                        Authorization: `${token}`,
+                        "Content-Type": "application/json",
+                    },
                 }
-            });
-            console.log('Task saved:', response.data);
-            // Clear the form
+            );
+
+            console.log("Tarea guardada con éxito:", response.data);
+
+            // Limpiar el formulario
             setTask({
-                title: '',
-                description: '',
-                dueDate: '',
-                priority: '',
-                user: '' // Limpiar el campo user
+                title: "",
+                description: "",
+                dueDate: "",
+                priority: "",
             });
         } catch (error) {
-            console.error('Error saving task:', error.response ? error.response.data : error.message);
-            if (error.response && error.response.status === 401) {
-                console.error('Unauthorized: Invalid or expired token');
+            console.error(
+                "Error al guardar la tarea:",
+                error.response ? error.response.data : error.message
+            );
+
+            if (error.response) {
+                console.error("Detalles del error:", error.response.data);
             }
         }
     };
@@ -57,7 +75,7 @@ const Dashboard = () => {
             <h1>Dashboard</h1>
             <form onSubmit={handleSubmit}>
                 <div>
-                    <label>Title:</label>
+                    <label>Título:</label>
                     <input
                         type="text"
                         name="title"
@@ -67,7 +85,7 @@ const Dashboard = () => {
                     />
                 </div>
                 <div>
-                    <label>Description:</label>
+                    <label>Descripción:</label>
                     <textarea
                         name="description"
                         value={task.description}
@@ -76,7 +94,7 @@ const Dashboard = () => {
                     />
                 </div>
                 <div>
-                    <label>Due Date:</label>
+                    <label>Fecha de vencimiento:</label>
                     <input
                         type="date"
                         name="dueDate"
@@ -86,20 +104,20 @@ const Dashboard = () => {
                     />
                 </div>
                 <div>
-                    <label>Priority:</label>
+                    <label>Prioridad:</label>
                     <select
                         name="priority"
                         value={task.priority}
                         onChange={handleChange}
                         required
                     >
-                        <option value="">Select Priority</option>
+                        <option value="">Selecciona una prioridad</option>
                         <option value="baja">Baja</option>
                         <option value="media">Media</option>
                         <option value="alta">Alta</option>
                     </select>
                 </div>
-                <button type="submit">Save Task</button>
+                <button type="submit">Guardar Tarea</button>
             </form>
         </div>
     );
