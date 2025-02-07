@@ -1,0 +1,18 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    color: #333;
+}
+
+button {
+    background: blue; /* This can be removed or adjusted to match Bootstrap styles */
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+}
